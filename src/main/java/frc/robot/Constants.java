@@ -21,41 +21,48 @@ public final class Constants {
     public static int ENABLE_LIMIT = 30;
 
     // Scissor lift motor
-    public static int LIFT_MOTOR = 0;
+    public static int LIFT_MOTOR = 14;
 
     // MEASUREMENTS
         // Drivetrain measurements
         public static double CENTER_TO_WHEEL_X = 21/2/39.37; // 21 in. to m
         public static double CENTER_TO_WHEEL_Y = 19/2/39.37; // 19 in. to m
-        public static double COUNTS_PER_ROTATION = 4096;
+        public static double COUNTS_PER_REVOLUTION_MAG = 4096;
         public static double WHEEL_DIAMETER = 6;
-        public static double DISTANCE_PER_PULSE = ((Math.PI * WHEEL_DIAMETER) / COUNTS_PER_ROTATION) / 39.37;
+        public static double DISTANCE_PER_PULSE = ((Math.PI * WHEEL_DIAMETER) / COUNTS_PER_REVOLUTION_MAG) / 39.37;
 
         // Bottom arm
-        public static double INNER_SEG_DIAMETER = 6; //in
-        public static double OUTER_SEG_DIAMETER = 16; //in
+        public static double INNER_SEG_CURVE_CIRCUMFERENCE = 8 * Math.PI; //in
+        public static double OUTER_SEG_CURVE_CIRCUMFERENCE = 16 * Math.PI; //in
+        public static double INNER_OUTER_GEAR_RATIO = 12.76;
+        public static double ANGLE_PER_PULSE = (360 / COUNTS_PER_REVOLUTION_MAG);
 
     // PID CONSTANTS
         // Bottom arm
-        public static double INNER_SEG_KP = 3 * 0.001;
-        public static double INNER_SEG_KI = 0 * 0.001;
-        public static double INNER_SEG_KD = 0;
+        public static double INNER_SEG_KP = 6.5 * 0.001;
+        public static double INNER_SEG_KI = 4 * 0.001;
+        public static double INNER_SEG_KD = .8 * 0.001;
 
-        public static double OUTER_SEG_KP = 5 * 0.001;
-        public static double OUTER_SEG_KI = 0 * 0.001;
-        public static double OUTER_SEG_KD = 0;
+        public static double OUTER_SEG_KP = 12.5 * 0.001;
+        public static double OUTER_SEG_KI = 4  * 0.001;
+        public static double OUTER_SEG_KD = 1.75 * .001;
 
-        public static double FEED_INNER = 26;
-        public static double FEED_OUTER = 5.5;
+        public static double FEED_INNER = 3;
+        public static double FEED_OUTER = 47;
 
         public static double RETRACTED_INNER = 0;
         public static double RETRACTED_OUTER = 0;
 
-        public static double PIVOT_INNER = 17.75;
-        public static double PIVOT_OUTER = 62.75;
+        public static double PIVOT_INNER = 46;
+        public static double PIVOT_OUTER = 122;
 
-        public static double EXTENDED_INNER = 45.25;
-        public static double EXTENDED_OUTER = 89.75;
+        public static double EXTENDED_INNER = 94;
+        public static double EXTENDED_OUTER = 170;
+
+        // Drivetrain
+        public static double ROTATE_KP = 4.167 * 0.001;
+        public static double ROTATE_KI = 4 * 0.001;
+        public static double ROTATE_KD = 0 * 0.001;
 
     // MOTOR ID PORTS
         // Top arm motor ID ports
@@ -76,8 +83,8 @@ public final class Constants {
         public static int TOP_ENCODER_PORT_A = 0; // hex bore
         public static int TOP_ENCODER_PORT_B = 1;
         // Bottom Arm
-        public static int BOTTOM_INNER_ENCODER_PORT_A = 4; // cimcoders
-        public static int BOTTOM_INNER_ENCODER_PORT_B = 5; //left side
+        public static int BOTTOM_INNER_ENCODER_PORT_A = 6; // cimcoders
+        public static int BOTTOM_INNER_ENCODER_PORT_B = 7; //left side
         public static int BOTTOM_OUTER_ENCODER_PORT_A = 2;
         public static int BOTTOM_OUTER_ENCODER_PORT_B = 3; //right side
 
@@ -91,11 +98,6 @@ public final class Constants {
     public static boolean IS_TANKDRIVE_SQUARED = false;
     public static boolean DOES_CHEESYDRIVE_PIVOT = false;
     public static boolean IS_ARCADEDRIVE_SQUARED = true;
-
-    // Auto rotate PID constants
-    public static int ROTATE_KP = 0;
-    public static int ROTATE_KI = 0;
-    public static int ROTATE_KD = 0;
 
     // Autonomous drivetrain PID
     public static double AUTON_KP = 0;

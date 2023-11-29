@@ -22,6 +22,7 @@ public class ScissorLift extends SubsystemBase {
     }
 
     private void configureShuffleboardData() {
+        
     }
 
     @Override

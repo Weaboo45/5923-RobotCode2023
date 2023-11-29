@@ -8,10 +8,7 @@ import static frc.robot.Constants.*;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
 
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -23,10 +20,11 @@ public class BottomArm extends SubsystemBase {
   private ShuffleboardTab tab;
   private int goalSetpoint, currentSetpoint, defaultSetpoint;
   private double innerSetpoint, outerSetpoint;
+  private double innerOutput, outerOutput, innerError, outerError;
   private boolean setpointReached;
 
-  private Encoder innerSegEncoder = new Encoder(BOTTOM_INNER_ENCODER_PORT_A, BOTTOM_INNER_ENCODER_PORT_B, true, EncodingType.k2X);
-  private Encoder outerSegEncoder = new Encoder(BOTTOM_OUTER_ENCODER_PORT_A, BOTTOM_OUTER_ENCODER_PORT_B, false, EncodingType.k2X);
+  //private Encoder innerSegEncoder = new Encoder(BOTTOM_INNER_ENCODER_PORT_A, BOTTOM_INNER_ENCODER_PORT_B, true, EncodingType.k2X);
+  //private Encoder outerSegEncoder = new Encoder(BOTTOM_OUTER_ENCODER_PORT_A, BOTTOM_OUTER_ENCODER_PORT_B, false, EncodingType.k2X);
   private boolean feedCone;
 
   /** Creates a new BottomArm. */
@@ -36,8 +34,8 @@ public class BottomArm extends SubsystemBase {
 
     innerSegMotor.setInverted(true);
 
-    innerSegEncoder.setDistancePerPulse(1 / (INNER_SEG_DIAMETER * Math.PI));
-    outerSegEncoder.setDistancePerPulse(1 / (OUTER_SEG_DIAMETER * Math.PI));
+    //innerSegEncoder.setDistancePerPulse(1 / (INNER_SEG_DIAMETER * Math.PI));
+    //outerSegEncoder.setDistancePerPulse(1 / (OUTER_SEG_DIAMETER * Math.PI));
 
     outerSegMotor.setNeutralMode(NeutralMode.Brake);
     innerSegMotor.setNeutralMode(NeutralMode.Brake);
@@ -58,24 +56,37 @@ public class BottomArm extends SubsystemBase {
     outerSegMotor.set(outerSpeed);
 }
   public void resetEncoders() {
-    innerSegEncoder.reset();
-    outerSegEncoder.reset();
+    innerSegMotor.setSelectedSensorPosition(0);
+    outerSegMotor.setSelectedSensorPosition(0);
+  }
+
+  public void feedOutput(double innerOutput, double outerOutput, double innerError, double outerError) {
+    this.innerOutput = innerOutput;
+    this.outerOutput = outerOutput;
+    this.innerError = innerError;
+    this.outerError = outerError;
   }
 
   private void configureShuffleboardData() {
     ShuffleboardLayout layout = tab.getLayout("Bottom Arm", BuiltInLayouts.kList);
 
+    /*
     layout.addNumber("Inner segment encoder value", () -> getInnerSegEncoderPos());
-    layout.add("Reset inner segment encoder", new InstantCommand(() -> innerSegEncoder.reset()));
+    layout.add("Reset inner segment encoder", new InstantCommand(() -> innerSegMotor.setSelectedSensorPosition(0)));
     layout.addNumber("Outer segment encoder value", () -> getOuterSegEncoderPos());
-    layout.add("Reset outer segment encoder", new InstantCommand(() -> outerSegEncoder.reset()));
-    layout.addBoolean("Feed Cone", () -> feedCone);
+    layout.add("Reset outer segment encoder", new InstantCommand(() -> outerSegMotor.setSelectedSensorPosition(0)));
     layout.addInteger("currentSetpoint", () -> currentSetpoint);
-    layout.addInteger("goalSetpoint", () -> goalSetpoint);
-    layout.addInteger("defaultSetpoint", () -> defaultSetpoint);
     layout.addDouble("Inner setpoint", () -> innerSetpoint);
     layout.addDouble("Outer setpoint", () -> outerSetpoint);
-    layout.addBoolean("setpointReached", () -> setpointReached);
+    layout.addDouble("Inner output", () -> innerOutput);
+    layout.addDouble("Outer output", () -> outerOutput);
+    layout.addDouble("Inner error", () -> innerError);
+    layout.addDouble("Outer error", () -> outerError);
+     */
+
+    layout.addNumber("Inner Seg Volts", () -> innerSegMotor.getMotorOutputVoltage());
+    layout.addNumber("Outer Seg Volts", () -> outerSegMotor.getMotorOutputVoltage());
+
   }
 
   public void feedShuffleboardValues(boolean feedCone, int currentSetpoint, int goalSetpoint, int defaultSetpoint, double innerSetpoint, double outerSetpoint, boolean setpointReached) {
@@ -88,8 +99,9 @@ public class BottomArm extends SubsystemBase {
     this.setpointReached = setpointReached;
   }
 
-  public double getInnerSegEncoderPos() { return innerSegEncoder.getDistance(); }
-  public double getOuterSegEncoderPos() { return outerSegEncoder.getDistance(); }
+  // Arc length = (theta / 360) * circumference
+  public double getInnerSegEncoderPos() { return (innerSegMotor.getSelectedSensorPosition() * ANGLE_PER_PULSE); }
+  public double getOuterSegEncoderPos() { return (outerSegMotor.getSelectedSensorPosition() * ANGLE_PER_PULSE); }
 
   @Override
   public void periodic() {

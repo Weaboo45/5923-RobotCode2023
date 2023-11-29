@@ -9,7 +9,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
-import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -30,7 +29,6 @@ public class MecanumDrivetrain extends SubsystemBase {
 
   private MecanumDrive mDrive;
   private ShuffleboardTab tab;
-  private double phase;
 
   public MecanumDrivetrain(ShuffleboardTab tab) {
     // Motor controllers
@@ -57,10 +55,6 @@ public class MecanumDrivetrain extends SubsystemBase {
   public void applyBoostMultiplier(double multiplier) {
   }
 
-  public void feedPhase(double phase) {
-    this.phase = phase;
-  }
-
   public void toggleMotorMode(boolean modeSwitch) {
     if (modeSwitch) {
       coastMode = !coastMode;
@@ -80,22 +74,17 @@ public class MecanumDrivetrain extends SubsystemBase {
   }
 
   private void configureShuffleboardData() {
-    ShuffleboardLayout layout = tab.getLayout("Encoder Vals", BuiltInLayouts.kGrid).withPosition(10, 0);
-    layout.add(this);
-    //layout.add("Mecanum Drive Base", mDrive);
-    //
-    layout.addNumber("Front Left Encoder Pos", () -> getFrontLeftEncoderPosition());
-    //layout.addNumber("Front Left Encoder Vel", () -> getFrontLeftEncoderVelocity());
-    //
-    layout.addNumber("Rear Left Encoder Pos", () -> getRearLeftEncoderPosition());
-    //layout.addNumber("Rear Left Encoder Vel", () -> getRearLeftEncoderVelocity());
-    //
-    layout.addNumber("Front Right Encoder Pos", () -> getFrontRightEncoderPosition());
-    //layout.addNumber("Front Right Encoder Vel", () -> getFrontRightEncoderVelocity());   
-    //
-    layout.addNumber("Rear Right Encoder Pos", () -> getRearRightEncoderPosition());
-    //layout.addNumber("Rear Right Encoder Vel", () -> getRearRightEncoderVelocity());
-    layout.addNumber("phase", () -> phase);
+    ShuffleboardLayout layout = tab.getLayout("Encoder Vals", BuiltInLayouts.kGrid).withPosition(9, 0);
+    //layout.add(this);
+    //layout.addNumber("Front Left Encoder Pos", () -> getFrontLeftEncoderPosition());
+    //layout.addNumber("Rear Left Encoder Pos", () -> getRearLeftEncoderPosition());
+    //layout.addNumber("Front Right Encoder Pos", () -> getFrontRightEncoderPosition());
+    //layout.addNumber("Rear Right Encoder Pos", () -> getRearRightEncoderPosition());
+
+    layout.addNumber("Rear Left Volts", () -> rearLeftMotor.getMotorOutputVoltage());
+    layout.addNumber("Rear Right Volts", () -> rearRightMotor.getMotorOutputVoltage());
+    layout.addNumber("Front Left Volts", () -> frontLeftMotor.getMotorOutputVoltage());
+    layout.addNumber("Front Right Volts", () -> frontRightMotor.getMotorOutputVoltage());
 
     layout.addBoolean("Coast Mode", () -> coastMode);
   }
@@ -130,6 +119,7 @@ public class MecanumDrivetrain extends SubsystemBase {
     frontRightMotor.configPeakCurrentDuration(150);
     rearRightMotor.configPeakCurrentDuration(150);
     rearLeftMotor.configPeakCurrentDuration(150);
+    
 
     frontLeftMotor.configContinuousCurrentLimit(ENABLE_LIMIT);
     frontRightMotor.configContinuousCurrentLimit(ENABLE_LIMIT);
@@ -166,10 +156,6 @@ public class MecanumDrivetrain extends SubsystemBase {
   public double getRearLeftEncoderPosition() { return rearLeftMotor.getSelectedSensorPosition() * DISTANCE_PER_PULSE; }
   public double getFrontRightEncoderPosition() { return frontRightMotor.getSelectedSensorPosition() * DISTANCE_PER_PULSE; }
   public double getRearRightEncoderPosition() { return rearRightMotor.getSelectedSensorPosition() * DISTANCE_PER_PULSE; }
-  //public double getFrontLeftEncoderVelocity() { return frontLeftMotor.getSelectedSensorVelocity(); }
-  //public double getFrontRightEncoderVelocity() { return frontRightMotor.getSelectedSensorVelocity(); }
-  //public double getRearLeftEncoderVelocity() { return rearLeftMotor.getSelectedSensorVelocity(); }
-  //public double getRearRightEncoderVelocity() { return rearRightMotor.getSelectedSensorVelocity(); }
 
   public void driveCartesian(double forward, double side, double zRotation, Rotation2d gyroAngle) {
     forward = MathUtil.applyDeadband(forward, SPEED_DEADBAND);
@@ -189,12 +175,5 @@ public class MecanumDrivetrain extends SubsystemBase {
     zRotation = MathUtil.applyDeadband(zRotation, ROTATION_DEADBAND);
 
     mDrive.driveCartesian(xSpeed, ySpeed, zRotation);
-  }
-
-  public void tankDrive(double xSpeed) {
-    frontLeftMotor.set(xSpeed);
-    frontRightMotor.set(xSpeed);
-    rearLeftMotor.set(xSpeed);
-    rearRightMotor.set(xSpeed);
   }
 }

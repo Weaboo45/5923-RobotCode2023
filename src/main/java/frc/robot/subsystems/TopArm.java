@@ -54,7 +54,13 @@ public class TopArm extends SubsystemBase {
 
         layout.addNumber("Top Arm Encoder", () -> getTopEncoderPosition());
         layout.add("Reset encoder", new InstantCommand(() -> topEncoder.reset()));
-        layout.addNumber("Current top arm setpoint", () -> setpoint);
+        //layout.addNumber("Current top arm setpoint", () -> setpoint);
+
+        layout.addNumber("Top Arm Talon Volts", () -> topArmTalon.getMotorOutputVoltage());
+        layout.addNumber("Top Arm Intake Volts", () -> topArmIntakeMotor.getMotorOutputVoltage());
+        layout.addNumber("Top Arm Victor Volts", () -> topArmVictor.getMotorOutputVoltage());
+        layout.addNumber("Break motor Volts", () -> liftMotor.getMotorOutputVoltage());
+
     }
 
     public void feedCurrentSetpoint(double setpoint) {

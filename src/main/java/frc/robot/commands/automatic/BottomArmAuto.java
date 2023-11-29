@@ -6,7 +6,11 @@ package frc.robot.commands.automatic;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.BottomArm;
 
@@ -14,19 +18,23 @@ import static frc.robot.Constants.*;
 
 public class BottomArmAuto extends CommandBase {
   private BottomArm bottomArm;
-  private Supplier<Boolean> extendButton, feedButton;
-  private boolean feedCone, setpointReached, changeSetpoint;
-  private int defaultSetpoint, goalSetpoint, goalSetpointPrevious, currentSetpoint;
-  private double[] setpointsInner = {FEED_INNER, RETRACTED_INNER, PIVOT_INNER, EXTENDED_INNER};
-  private double[] setpointsOuter = {FEED_OUTER, RETRACTED_OUTER, PIVOT_OUTER, EXTENDED_OUTER};
+  private Supplier<Boolean> upPos, downPos;
+  private boolean feedCone, setpointReached;
+  private int defaultSetpoint, goalSetpoint, currentSetpoint;
+  private double[] setpointsInner = {RETRACTED_INNER, FEED_INNER, PIVOT_INNER, EXTENDED_INNER};
+  private double[] setpointsOuter = {RETRACTED_OUTER, FEED_OUTER, PIVOT_OUTER, EXTENDED_OUTER};
   private double error, errorIntegral, dt, previousError, errorDerivative, previousTimestamp;
+  private PIDController pidControllerOuter = new PIDController(OUTER_SEG_KP, OUTER_SEG_KI, OUTER_SEG_KD);
+  private PIDController pidControllerInner = new PIDController(INNER_SEG_KP, INNER_SEG_KI, INNER_SEG_KD);
 
   /** Creates a new BottomArmAuto. */
-  public BottomArmAuto(BottomArm bottomArm, Supplier<Boolean> extendButton, Supplier<Boolean> feedButton) {
+  public BottomArmAuto(BottomArm bottomArm, Supplier<Boolean> upPos, Supplier<Boolean> downPos) {
     addRequirements(bottomArm);
     this.bottomArm = bottomArm;
-    this.extendButton = extendButton;
-    this.feedButton = feedButton;
+    this.upPos = upPos;
+    this.downPos = downPos;
+    pidControllerOuter.setTolerance(4);
+    pidControllerInner.setTolerance(4);
   }
 
   // Called when the command is initially scheduled.
@@ -36,49 +44,47 @@ public class BottomArmAuto extends CommandBase {
     previousTimestamp = Timer.getFPGATimestamp();
 
     bottomArm.resetEncoders();
-    defaultSetpoint = 1;
-    goalSetpoint = 1;
-    goalSetpointPrevious = goalSetpoint;
-    currentSetpoint = 1;
+    currentSetpoint = 0;
     setpointReached = true;
     feedCone = false;
-    changeSetpoint = false;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (extendButton.get()) {
-      goalSetpoint = 3;
-      currentSetpoint = 3;
+    if (upPos.get() && currentSetpoint < setpointsInner.length-1) {
+      currentSetpoint++;
     }
-    else{
-      goalSetpoint = defaultSetpoint;
-    }
-
-    if (feedButton.get()) {
-      coneSwitch();
+    else if (downPos.get() && currentSetpoint > 0) {
+      currentSetpoint--;
     }
 
-    setpointReached = setpointReached(); // determined from encoder readings
+    SmartDashboard.putNumber("Current Setpoint", currentSetpoint);
 
+    //setpointReached = setpointReached(); // determined from encoder readings
     // when currentSetpoint should change
-    if (goalSetpoint != goalSetpointPrevious || setpointReached && currentSetpoint != goalSetpoint) { changeSetpoint = true; }
+    
+    //double innerOutput = calculateMotorOutput(bottomArm.getInnerSegEncoderPos(), setpointsInner[currentSetpoint], INNER_SEG_KP, INNER_SEG_KI, INNER_SEG_KD);
+    //double outerOutput = calculateMotorOutput(bottomArm.getOuterSegEncoderPos(), setpointsOuter[currentSetpoint], OUTER_SEG_KP, OUTER_SEG_KI, OUTER_SEG_KD);
 
-    if (currentSetpoint < goalSetpoint && changeSetpoint) { currentSetpoint++; }
-    else if (currentSetpoint > goalSetpoint && changeSetpoint) { currentSetpoint--; }
-    else if (currentSetpoint == goalSetpoint && setpointReached) { bottomArm.move(0, 0); }
-    else if (setpointReached == false) {
-      double innerOutput = calculateMotorOutput(bottomArm.getInnerSegEncoderPos(), setpointsInner[currentSetpoint], INNER_SEG_KP, INNER_SEG_KI, INNER_SEG_KD);
-      double outerOutput = calculateMotorOutput(bottomArm.getOuterSegEncoderPos(), setpointsOuter[currentSetpoint], OUTER_SEG_KP, OUTER_SEG_KI, OUTER_SEG_KD);
-      bottomArm.move(innerOutput, outerOutput);
+    double innerOutput = 0;
+    double outerOutput = 0;
+    if (Math.abs(bottomArm.getInnerSegEncoderPos() - setpointsInner[currentSetpoint]) > 2.5) {
+      innerOutput = pidControllerInner.calculate(bottomArm.getInnerSegEncoderPos(), setpointsInner[currentSetpoint]);
+      innerOutput = MathUtil.clamp(innerOutput, -.5, .5);
+  
+    if (Math.abs(bottomArm.getOuterSegEncoderPos() - setpointsOuter[currentSetpoint]) > 2.5) {
+      outerOutput = pidControllerOuter.calculate(bottomArm.getOuterSegEncoderPos(), setpointsOuter[currentSetpoint]);
+      outerOutput = MathUtil.clamp(outerOutput, -.5, .5);
     }
+    bottomArm.move(-innerOutput, -outerOutput);
 
+    bottomArm.feedOutput(-innerOutput, -outerOutput, setpointsInner[currentSetpoint] - bottomArm.getInnerSegEncoderPos(), setpointsOuter[currentSetpoint] - bottomArm.getOuterSegEncoderPos());
     bottomArm.feedShuffleboardValues(feedCone, currentSetpoint, goalSetpoint, defaultSetpoint, setpointsInner[currentSetpoint], setpointsOuter[currentSetpoint], setpointReached);
-    goalSetpointPrevious = goalSetpoint;
-    changeSetpoint = false;
   }
+}
 
+  /*
   private void coneSwitch() {
     feedCone = !feedCone;
     if (feedCone) {
@@ -88,10 +94,13 @@ public class BottomArmAuto extends CommandBase {
       defaultSetpoint = 1;
     }
   }
+  */
 
+  /* 
   private boolean setpointReached() {
     return (Math.abs(bottomArm.getInnerSegEncoderPos() - setpointsInner[currentSetpoint]) <= 5) && (Math.abs(bottomArm.getOuterSegEncoderPos() - setpointsOuter[currentSetpoint]) <= 5);
   }
+  */
 
   // Called once the command ends or is interrupted.
   @Override

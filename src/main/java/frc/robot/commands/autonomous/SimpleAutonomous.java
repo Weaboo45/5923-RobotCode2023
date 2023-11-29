@@ -52,7 +52,7 @@ public class SimpleAutonomous extends CommandBase {
     switch (phase) {
       case 1: // extend arm
         if (timer.get() < 3) {
-          topArm.move(0.35);
+          topArm.move(0.4);
         }
         else {
           topArm.move(0);
@@ -70,7 +70,7 @@ public class SimpleAutonomous extends CommandBase {
         break;
       case 3: // drive back, retract arm
         if (timer.get() < 6) {
-          drivetrain.driveCartesian(0.75, 0, 0, ahrs.getRotation2d());
+          drivetrain.driveCartesian(.9, 0, 0, ahrs.getRotation2d());
           topArm.move(-0.28);
         }
         else {

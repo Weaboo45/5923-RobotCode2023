@@ -87,14 +87,12 @@ public class RobotContainer {
   private final SimpleAutonomous simpleAuto = new SimpleAutonomous(mecanumDrivetrain, topArm, bottomArm, ahrs);
   private final AutonomousPID pidAuto = new AutonomousPID(mecanumDrivetrain, topArm, bottomArm, ahrs);
 
-  // Xbox contro
-  private final DriveMecanum drivetrainXbox = new DriveMecanum(mecanumDrivetrain, () -> xbox.getLeftY(), ()-> xbox.getLeftX(), ()-> xbox.getRightX(), ()-> ahrs.getRotation2d(), () -> xbox.getStartButtonReleased() , () -> xbox.getBackButtonReleased());
+  // Xbox controls
+  private final DriveMecanum drivetrainXbox = new DriveMecanum(mecanumDrivetrain, () -> xbox.getLeftY(), ()-> xbox.getLeftX(), ()-> xbox.getRightX(), ()-> ahrs, () -> xbox.getStartButtonReleased() , () -> xbox.getBackButtonReleased(), () -> xbox.getRightY());
   private final TopArmManual topArmManualXbox = new TopArmManual(topArm, () -> xbox.getAButton(), () -> xbox.getXButton(), () -> xbox.getLeftTriggerAxis(), () -> xbox.getRightTriggerAxis(), () -> xbox.getAButtonReleased(), () -> xbox.getXButtonReleased());
-  private final BottomArmManual bottomArmManualXbox = new BottomArmManual(bottomArm, () -> xbox.getPOV());
-  private final RobotLift liftXbox = new RobotLift(scissorLift, ()-> xbox.getRightBumper(), ()-> xbox.getRightBumper());
-
-  private final TopArmAuto topArmAutoXbox = new TopArmAuto(topArm, () -> xbox.getLeftBumperReleased(), () -> xbox.getRightBumperReleased());
-  private final BottomArmAuto bottomArmAutoXbox = new BottomArmAuto(bottomArm, () -> xbox.getBButton(), () -> xbox.getYButtonReleased());
+  private final RobotLift liftXbox = new RobotLift(scissorLift, ()-> xbox.getRightBumper(), ()-> xbox.getLeftBumper());
+  
+  private final BottomArmAuto bottomArmAutoXbox = new BottomArmAuto(bottomArm, () -> xbox.getYButtonReleased(), () -> xbox.getBButtonReleased());
 
   // Joystick controls
   //private final DriveMecanum drivetrainJoystick = new DriveMecanum(mecanumDrivetrain, () -> stick.getX(), () -> stick.getY(), () -> stick.getTwist(), ()-> ahrs.getRotation2d());
@@ -131,7 +129,7 @@ public class RobotContainer {
     .withPosition(2, 0).withSize(1, 3)
     .withProperties(Map.of("label position", "BOTTOM"));
 
-    mecanumSensor.addNumber("Gyro", ()-> ahrs.getAngle()).withWidget(BuiltInWidgets.kDial);
+    mecanumSensor.addNumber("Gyro", ()-> ahrs.getYaw()).withWidget(BuiltInWidgets.kGyro);
 
     mecanumSensor.add("Reset",
     new InstantCommand(()-> ahrs.zeroYaw()));

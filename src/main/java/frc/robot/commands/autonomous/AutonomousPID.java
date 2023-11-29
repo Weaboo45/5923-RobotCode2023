@@ -16,7 +16,7 @@ import static frc.robot.Constants.*;
 
 public class AutonomousPID extends CommandBase {
   private double error, dt, errorDerivative, previousTimestamp, previousError, errorIntegral;
-  private double lastWorldLinearAccelX, lastWorldLinearAccelY;
+  //private double lastWorldLinearAccelX, lastWorldLinearAccelY;
   private double armMotorOutput, forwardOutput, rotation;
   private MecanumDrivetrain drivetrain;
   private TopArm topArm;
@@ -62,6 +62,7 @@ public class AutonomousPID extends CommandBase {
     return (kP * error) + (kI * errorIntegral) + (kD * errorDerivative);
   }
 
+  /* 
   private boolean collisionDetected() {
     boolean collisionDetected = false;
     // x-component
@@ -79,6 +80,7 @@ public class AutonomousPID extends CommandBase {
 
     return collisionDetected;
   }
+  */
 
   private void pidAutoSequence() {
     switch (phase) {
